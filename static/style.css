@@ -7,6 +7,7 @@
   --accent: #0f9d8a;
   --accent-2: #216ee0;
   --bgi: #0f9d8a;
+  --sr: #8b5cf6;
   --zzz: #216ee0;
   --all: #ff8a3d;
   --shadow: 0 20px 44px rgba(18, 36, 64, 0.12);
@@ -68,7 +69,8 @@ body {
 
 .hero-head {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 14px;
   flex-wrap: wrap;
 }
@@ -228,6 +230,10 @@ body {
 
 .source-bgi {
   background: var(--bgi);
+}
+
+.source-sr {
+  background: var(--sr);
 }
 
 .source-zzz {

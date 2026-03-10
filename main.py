@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from routes.bgi import create_bgi_router
+from routes.sr import create_sr_router
 from routes.zzz import create_zzz_router
 from utils.system_utils import SystemUtils
 
@@ -23,6 +24,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount(SystemUtils.IMAGE_CACHE_ROUTE, StaticFiles(directory=CACHE_DIR), name="image-cache")
 app.include_router(create_zzz_router(DB_PATH, CACHE_DIR))
 app.include_router(create_bgi_router(DB_PATH, CACHE_DIR))
+app.include_router(create_sr_router(DB_PATH, CACHE_DIR))
 
 
 @app.on_event("startup")

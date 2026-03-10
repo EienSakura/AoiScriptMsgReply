@@ -16,6 +16,7 @@
             <button class="source-tab active" data-source="all" type="button">全部</button>
             <button class="source-tab" data-source="zzz" type="button">ZZZ</button>
             <button class="source-tab" data-source="bgi" type="button">BGI</button>
+            <button class="source-tab" data-source="sr" type="button">SR</button>
           </div>
           <div class="hero-title-group">
             <p class="eyebrow">Aoi 小葵脚本通知接收器</p>
@@ -54,7 +55,8 @@
       const sourceMeta = {
         all: { label: "全部", desc: "查看 Aoi 小葵最近 7 天接收的全部脚本消息。" },
         zzz: { label: "ZZZ", desc: "只查看 ZenlessZoneZero-OneDragon 写入的小葵消息。" },
-        bgi: { label: "BGI", desc: "只查看 better-genshin-impact 写入的小葵消息。" }
+        bgi: { label: "BGI", desc: "只查看 better-genshin-impact 写入的小葵消息。" },
+        sr: { label: "SR", desc: "查看 March7th Assistant 写入的小葵消息。" }
       };
 
       let selectedSource = "all";

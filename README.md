@@ -5,6 +5,7 @@
 支持的脚本包括：
 - `ZenlessZoneZero-OneDragon`
 - `better-genshin-impact`
+- `March7th Assistant`
 
 ## 环境要求
 
@@ -66,10 +67,12 @@ AoiScriptMsgReply/
 ├── routes/
 │   ├── __init__.py
 │   ├── bgi.py
+│   ├── sr.py
 │   └── zzz.py
 ├── utils/
 │   ├── __init__.py
 │   ├── bgi_utils.py
+│   ├── sr_utils.py
 │   ├── system_utils.py
 │   └── zzz_utils.py
 ├── static/

@@ -29,7 +29,7 @@ class SystemUtils:
     MAX_IMAGE_BYTES = 10 * 1024 * 1024
     MAX_IMAGE_BASE64_CHARS = 16 * 1024 * 1024
     APP_TZ = _load_app_timezone()
-    SUPPORTED_SOURCES = {"all", "zzz", "bgi"}
+    SUPPORTED_SOURCES = {"all", "zzz", "bgi", "sr"}
 
     @staticmethod
     def get_conn(db_path: Path) -> sqlite3.Connection:
@@ -268,6 +268,29 @@ class SystemUtils:
         os.utime(file_path, (event_ts, event_ts))
         return f"{cls.IMAGE_CACHE_ROUTE}/{file_path.name}"
 
+    @classmethod
+    def cache_image_bytes(
+        cls,
+        cache_dir: Path,
+        image_bytes: bytes,
+        event_ts: int,
+        mime_type: str = "",
+    ) -> str:
+        """直接缓存上传的二进制图片，并返回静态资源访问路径。"""
+        if not image_bytes:
+            return ""
+        if len(image_bytes) > cls.MAX_IMAGE_BYTES:
+            raise HTTPException(status_code=400, detail="image 解码后大小不能超过 10MB")
+
+        extension = cls.guess_image_extension_from_bytes(image_bytes, mime_type)
+        cache_key = hashlib.sha256(image_bytes).hexdigest()
+        file_name = f"{cache_key}{extension}"
+        file_path = cache_dir / file_name
+        if not file_path.exists():
+            file_path.write_bytes(image_bytes)
+        os.utime(file_path, (event_ts, event_ts))
+        return f"{cls.IMAGE_CACHE_ROUTE}/{file_path.name}"
+
     @staticmethod
     def validate_day(day: str | None) -> str | None:
         """校验日期参数格式。"""
@@ -282,10 +305,10 @@ class SystemUtils:
 
     @classmethod
     def validate_source(cls, source: str | None) -> str:
-        """校验来源筛选参数，仅允许 all、zzz、bgi。"""
+        """校验来源筛选参数，仅允许 all、zzz、bgi、sr。"""
         value = (source or "all").strip().lower()
         if value not in cls.SUPPORTED_SOURCES:
-            raise HTTPException(status_code=400, detail="source 仅支持 all、zzz、bgi")
+            raise HTTPException(status_code=400, detail="source 仅支持 all、zzz、bgi、sr")
         return value
 
     @classmethod
