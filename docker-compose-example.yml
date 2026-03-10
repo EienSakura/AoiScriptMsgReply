@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: simplezzz-fastapi
+    container_name: aoi-msg-receiver
     ports:
       - "8000:8000"
     environment:

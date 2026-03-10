@@ -1,6 +1,6 @@
-# AoiScriptMsgReply
+# AoiScriptMsgReceiver
 
-`AoiScriptMsgReply` 是一个 Aoi 小葵脚本接收器，用于接收并展示最近 7 天内的脚本消息。
+`AoiScriptMsgReceiver` 是一个 Aoi 小葵脚本接收器，用于接收并展示最近 7 天内的脚本消息。
 
 支持的脚本包括：
 - `ZenlessZoneZero-OneDragon`
@@ -59,7 +59,7 @@ docker compose down
 ## 项目结构
 
 ```text
-AoiScriptMsgReply/
+AoiScriptMsgReceiver/
 ├── main.py
 ├── requirements.txt
 ├── docker-compose.yml

@@ -19,7 +19,7 @@ CACHE_DIR = Path(os.getenv("IMAGE_CACHE_DIR", str(BASE_DIR / "image_cache")))
 
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="AoiScriptMsgReply", version="1.0.0")
+app = FastAPI(title="AoiScriptMsgReceiver", version="1.0.0")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount(SystemUtils.IMAGE_CACHE_ROUTE, StaticFiles(directory=CACHE_DIR), name="image-cache")
 app.include_router(create_zzz_router(DB_PATH, CACHE_DIR))
