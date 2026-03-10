@@ -9,7 +9,7 @@ import re
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import FastAPI, HTTPException, Request as FastAPIRequest
 from fastapi.responses import FileResponse
@@ -19,10 +19,20 @@ BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = Path(os.getenv("DB_PATH", str(BASE_DIR / "data.db")))
 STATIC_DIR = BASE_DIR / "static"
 CACHE_DIR = Path(os.getenv("IMAGE_CACHE_DIR", str(BASE_DIR / "image_cache")))
-APP_TZ = ZoneInfo("Asia/Shanghai")
 IMAGE_CACHE_ROUTE = "/image-cache"
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 MAX_IMAGE_BASE64_CHARS = 16 * 1024 * 1024
+
+
+def load_app_timezone() -> timezone:
+    try:
+        return ZoneInfo("Asia/Shanghai")
+    except ZoneInfoNotFoundError:
+        # Windows 某些 Python 环境缺少系统时区库时，退回到固定 UTC+8。
+        return timezone(timedelta(hours=8), name="Asia/Shanghai")
+
+
+APP_TZ = load_app_timezone()
 
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 

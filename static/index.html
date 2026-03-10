@@ -24,6 +24,10 @@
       <section class="panel content-panel">
         <div class="panel-header">
           <h2 id="contentTitle">内容列表</h2>
+          <div class="sort-switch" aria-label="时间排序">
+            <button id="sortDescBtn" class="sort-btn active" type="button">时间倒序</button>
+            <button id="sortAscBtn" class="sort-btn" type="button">时间正序</button>
+          </div>
         </div>
         <div id="list" class="list"></div>
       </section>
@@ -33,7 +37,11 @@
       const dayTabs = document.getElementById("dayTabs");
       const list = document.getElementById("list");
       const contentTitle = document.getElementById("contentTitle");
+      const sortDescBtn = document.getElementById("sortDescBtn");
+      const sortAscBtn = document.getElementById("sortAscBtn");
       let selectedDay = null;
+      let currentItems = [];
+      let sortOrder = "desc";
 
       function escapeHtml(text) {
         return String(text)
@@ -46,6 +54,36 @@
 
       function renderEmpty(message) {
         list.innerHTML = `<div class="empty">${escapeHtml(message)}</div>`;
+      }
+
+      function formatDisplayTime(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+          return escapeHtml(String(value));
+        }
+        return date.toLocaleString("zh-CN", {
+          hour12: false,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
+      }
+
+      function getSortedItems(items) {
+        const factor = sortOrder === "asc" ? 1 : -1;
+        return [...items].sort((a, b) => {
+          const aTime = new Date(a.timestamp).getTime();
+          const bTime = new Date(b.timestamp).getTime();
+          return (aTime - bTime) * factor;
+        });
+      }
+
+      function updateSortButtons() {
+        sortDescBtn.classList.toggle("active", sortOrder === "desc");
+        sortAscBtn.classList.toggle("active", sortOrder === "asc");
       }
 
       function renderTabs(days) {
@@ -75,7 +113,7 @@
           return;
         }
 
-        list.innerHTML = items
+        list.innerHTML = getSortedItems(items)
           .map((item, idx) => {
             const text = `${escapeHtml(item.title)}：${escapeHtml(item.content).replaceAll("\n", "<br/>")}`;
             const imageHtml = item.image
@@ -84,6 +122,7 @@
             const divider = idx < items.length - 1 ? `<hr class="divider" />` : "";
             return `
               <article class="item">
+                <div class="item-meta">时间：${formatDisplayTime(item.timestamp)}</div>
                 <p class="text">${text}</p>
                 ${imageHtml}
                 ${divider}
@@ -101,7 +140,8 @@
           return;
         }
         const data = await res.json();
-        renderItems(data.day, data.items || []);
+        currentItems = data.items || [];
+        renderItems(data.day, currentItems);
       }
 
       async function init() {
@@ -114,9 +154,22 @@
         const data = await res.json();
         const days = data.days || [];
         selectedDay = days[0] || null;
+        updateSortButtons();
         renderTabs(days);
         await loadItems(selectedDay);
       }
+
+      sortDescBtn.addEventListener("click", () => {
+        sortOrder = "desc";
+        updateSortButtons();
+        renderItems(selectedDay, currentItems);
+      });
+
+      sortAscBtn.addEventListener("click", () => {
+        sortOrder = "asc";
+        updateSortButtons();
+        renderItems(selectedDay, currentItems);
+      });
 
       init();
     </script>

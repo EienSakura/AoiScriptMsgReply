@@ -127,6 +127,36 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sort-switch {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: #eef3fb;
+  border: 1px solid #dbe3f1;
+}
+
+.sort-btn {
+  border: none;
+  background: transparent;
+  color: #47607f;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.sort-btn:hover {
+  transform: translateY(-1px);
+}
+
+.sort-btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
 
 .list {
@@ -136,6 +166,18 @@ body {
 .item {
   padding: 6px 0 2px;
   animation: fade-in 0.28s ease both;
+}
+
+.item-meta {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(27, 114, 232, 0.08);
+  color: #27538a;
+  font-size: 13px;
+  letter-spacing: 0.01em;
 }
 
 .text {
