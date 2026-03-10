@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>7日内容看板</title>
+    <title>Aoi小葵脚本通知接收器</title>
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
@@ -11,9 +11,18 @@
     <div class="bg-shape shape-b"></div>
     <main class="container">
       <section class="hero">
-        <p class="tag">FastAPI + SQLite</p>
-        <h1>7日内容看板</h1>
-        <p class="sub">默认展示最新一天的数据，可按日期快速切换查看。</p>
+        <div class="hero-head">
+          <div class="source-nav" aria-label="来源切换">
+            <button class="source-tab active" data-source="all" type="button">全部</button>
+            <button class="source-tab" data-source="zzz" type="button">ZZZ</button>
+            <button class="source-tab" data-source="bgi" type="button">BGI</button>
+          </div>
+          <div class="hero-title-group">
+            <p class="eyebrow">Aoi 小葵脚本通知接收器</p>
+            <h1>AoiScriptMsgReply</h1>
+          </div>
+        </div>
+        <p id="heroSub" class="sub">查看 Aoi 小葵最近 7 天接收的脚本消息，并按来源和日期快速切换。</p>
       </section>
 
       <section class="panel">
@@ -34,11 +43,21 @@
     </main>
 
     <script>
+      const sourceTabs = Array.from(document.querySelectorAll(".source-tab"));
       const dayTabs = document.getElementById("dayTabs");
       const list = document.getElementById("list");
       const contentTitle = document.getElementById("contentTitle");
+      const heroSub = document.getElementById("heroSub");
       const sortDescBtn = document.getElementById("sortDescBtn");
       const sortAscBtn = document.getElementById("sortAscBtn");
+
+      const sourceMeta = {
+        all: { label: "全部", desc: "查看 Aoi 小葵最近 7 天接收的全部脚本消息。" },
+        zzz: { label: "ZZZ", desc: "只查看 ZenlessZoneZero-OneDragon 写入的小葵消息。" },
+        bgi: { label: "BGI", desc: "只查看 better-genshin-impact 写入的小葵消息。" }
+      };
+
+      let selectedSource = "all";
       let selectedDay = null;
       let currentItems = [];
       let sortOrder = "desc";
@@ -72,6 +91,10 @@
         });
       }
 
+      function getSourceLabel(source) {
+        return sourceMeta[source]?.label || String(source || "").toUpperCase();
+      }
+
       function getSortedItems(items) {
         const factor = sortOrder === "asc" ? 1 : -1;
         return [...items].sort((a, b) => {
@@ -86,10 +109,17 @@
         sortAscBtn.classList.toggle("active", sortOrder === "asc");
       }
 
+      function updateSourceTabs() {
+        sourceTabs.forEach((button) => {
+          button.classList.toggle("active", button.dataset.source === selectedSource);
+        });
+        heroSub.textContent = sourceMeta[selectedSource].desc;
+      }
+
       function renderTabs(days) {
         dayTabs.innerHTML = "";
         if (!days.length) {
-          dayTabs.innerHTML = `<div class="empty">最近 7 天暂无数据</div>`;
+          dayTabs.innerHTML = `<div class="empty">当前来源最近 7 天暂无数据</div>`;
           return;
         }
 
@@ -97,33 +127,39 @@
           const button = document.createElement("button");
           button.className = "day-tab" + (day === selectedDay ? " active" : "");
           button.textContent = day;
-          button.addEventListener("click", () => {
+          button.addEventListener("click", async () => {
             selectedDay = day;
             renderTabs(days);
-            loadItems(day);
+            await loadItems(day);
           });
           dayTabs.appendChild(button);
         });
       }
 
       function renderItems(day, items) {
-        contentTitle.textContent = day ? `${day} 的内容` : "内容列表";
+        const sourceLabel = getSourceLabel(selectedSource);
+        contentTitle.textContent = day ? `${sourceLabel} · ${day}` : `${sourceLabel} 内容列表`;
         if (!items.length) {
-          renderEmpty("该日期暂无内容");
+          renderEmpty("该筛选条件下暂无内容");
           return;
         }
 
         list.innerHTML = getSortedItems(items)
           .map((item, idx) => {
-            const text = `${escapeHtml(item.title)}：${escapeHtml(item.content).replaceAll("\n", "<br/>")}`;
+            const title = escapeHtml(item.title);
+            const content = escapeHtml(item.content).replaceAll("\n", "<br/>");
             const imageHtml = item.image
               ? `<img class="item-image" src="${escapeHtml(item.image)}" alt="内容图片" loading="lazy" onerror="this.style.display='none'" />`
               : "";
             const divider = idx < items.length - 1 ? `<hr class="divider" />` : "";
             return `
               <article class="item">
-                <div class="item-meta">时间：${formatDisplayTime(item.timestamp)}</div>
-                <p class="text">${text}</p>
+                <div class="item-meta-row">
+                  <span class="item-meta">${formatDisplayTime(item.timestamp)}</span>
+                  <span class="source-badge source-${escapeHtml(item.source)}">${getSourceLabel(item.source)}</span>
+                </div>
+                <p class="item-title">${title}</p>
+                <p class="text">${content}</p>
                 ${imageHtml}
                 ${divider}
               </article>
@@ -133,8 +169,10 @@
       }
 
       async function loadItems(day) {
-        const url = day ? `/api/items?day=${encodeURIComponent(day)}` : "/api/items";
-        const res = await fetch(url);
+        const params = new URLSearchParams();
+        if (day) params.set("day", day);
+        if (selectedSource) params.set("source", selectedSource);
+        const res = await fetch(`/api/items?${params.toString()}`);
         if (!res.ok) {
           renderEmpty("加载失败，请稍后重试");
           return;
@@ -144,20 +182,33 @@
         renderItems(data.day, currentItems);
       }
 
-      async function init() {
-        renderEmpty("正在加载...");
-        const res = await fetch("/api/days");
+      async function loadDays() {
+        const params = new URLSearchParams();
+        if (selectedSource) params.set("source", selectedSource);
+        const res = await fetch(`/api/days?${params.toString()}`);
         if (!res.ok) {
           renderEmpty("日期加载失败");
-          return;
+          return [];
         }
         const data = await res.json();
-        const days = data.days || [];
+        return data.days || [];
+      }
+
+      async function refreshBoard() {
+        renderEmpty("正在加载...");
+        const days = await loadDays();
         selectedDay = days[0] || null;
-        updateSortButtons();
         renderTabs(days);
         await loadItems(selectedDay);
       }
+
+      sourceTabs.forEach((button) => {
+        button.addEventListener("click", async () => {
+          selectedSource = button.dataset.source;
+          updateSourceTabs();
+          await refreshBoard();
+        });
+      });
 
       sortDescBtn.addEventListener("click", () => {
         sortOrder = "desc";
@@ -170,6 +221,12 @@
         updateSortButtons();
         renderItems(selectedDay, currentItems);
       });
+
+      async function init() {
+        updateSourceTabs();
+        updateSortButtons();
+        await refreshBoard();
+      }
 
       init();
     </script>
